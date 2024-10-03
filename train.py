@@ -40,12 +40,18 @@ def main(config):
     # batch_transforms should be put on device
     dataloaders, batch_transforms = get_dataloaders(config, text_encoder, device)
 
+    print("DATALOADER OK")
+
     # build model architecture, then print to console
     model = instantiate(config.model, n_tokens=len(text_encoder)).to(device)
     logger.info(model)
 
+    print("MODEL OK")
+
     # get function handles of loss and metrics
     loss_function = instantiate(config.loss_function).to(device)
+
+    print("LOSS OK")
 
     metrics = {"train": [], "inference": []}
     for metric_type in ["train", "inference"]:
@@ -63,6 +69,8 @@ def main(config):
     # epoch_len = number of iterations for iteration-based training
     # epoch_len = None or len(dataloader) for epoch-based training
     epoch_len = config.trainer.get("epoch_len")
+
+    print("OPTIMIZER OK")
 
     trainer = Trainer(
         model=model,
