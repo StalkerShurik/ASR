@@ -15,12 +15,6 @@ def collate_fn(dataset_items: list[dict]):
             of the tensors.
     """
 
-    text_encoded = dataset_items[0]["text_encoded"]
-    audio = dataset_items[0]["audio"]
-    spectrogram = dataset_items[0]["spectrogram"]
-
-    print(f"COLLATE!!!!! {text_encoded.shape, audio.shape, spectrogram.shape}")
-
     """
         dataset[i] : dict_keys(['audio', 'spectrogram', 'text', 'text_encoded', 'audio_path'])
     """
@@ -31,11 +25,17 @@ def collate_fn(dataset_items: list[dict]):
     SPECTROGRAM_MAX_SIZE = 2**10
     AUDIO_MAX_SIZE = 2**18
 
+    batched_dataset_items["spectrogram_length"] = []
+    batched_dataset_items["text_encoded_length"] = []
+
     for i in range(len(dataset_items)):
         for key in dataset_items[i]:
             data_piece = dataset_items[i][key]
 
             if key == "text_encoded":
+                batched_dataset_items["text_encoded_length"].append(
+                    min(TEXT_ENCODED_MAX_SIZE, data_piece.shape[1])
+                )
                 data_piece = data_piece[:, :TEXT_ENCODED_MAX_SIZE]
                 data_piece = F.pad(
                     data_piece,
@@ -49,14 +49,14 @@ def collate_fn(dataset_items: list[dict]):
                 )
 
             if key == "spectrogram":
+                batched_dataset_items["spectrogram_length"].append(
+                    min(SPECTROGRAM_MAX_SIZE, data_piece.shape[2])
+                )
                 data_piece = data_piece[:, :, :SPECTROGRAM_MAX_SIZE]
                 data_piece = F.pad(
                     data_piece,
                     pad=(0, SPECTROGRAM_MAX_SIZE - data_piece.shape[2], 0, 0, 0, 0),
                 )
-
-            # if key in ["text_encoded", "audio", "spectrogram"]:
-            #     print(data_piece.shape)
 
             if key not in batched_dataset_items.keys():
                 if key in ["text_encoded", "audio", "spectrogram"]:
@@ -71,5 +71,12 @@ def collate_fn(dataset_items: list[dict]):
                     )
                 else:
                     batched_dataset_items[key].append(data_piece)
+
+    batched_dataset_items["spectrogram_length"] = torch.tensor(
+        batched_dataset_items["spectrogram_length"], dtype=torch.long
+    )
+    batched_dataset_items["text_encoded_length"] = torch.tensor(
+        batched_dataset_items["text_encoded_length"], dtype=torch.long
+    )
 
     return batched_dataset_items

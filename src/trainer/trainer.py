@@ -42,7 +42,6 @@ class Trainer(BaseTrainer):
 
         outputs = self.model(**batch)
         batch.update(outputs)
-
         all_losses = self.criterion(**batch)
         batch.update(all_losses)
 
