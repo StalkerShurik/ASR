@@ -17,3 +17,6 @@ pre-commit
 
 datasets
 wget
+wheel==0.44.0
+pybind11==2.13.6
+fastwer==0.1.3
