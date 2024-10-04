@@ -59,7 +59,16 @@ class CTCTextEncoder:
         return "".join([self.ind2char[int(ind)] for ind in inds]).strip()
 
     def ctc_decode(self, inds) -> str:
-        pass  # TODO
+        decoded = ""
+        last_ind = self.EMPTY_TOK
+        for ind in inds:
+            if ind == last_ind:
+                continue
+            if ind != self.EMPTY_TOK:
+                decoded += self.ind2char[ind]
+            last_ind = ind
+
+        return decoded
 
     @staticmethod
     def normalize_text(text: str):
