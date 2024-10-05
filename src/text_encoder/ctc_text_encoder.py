@@ -60,11 +60,11 @@ class CTCTextEncoder:
 
     def ctc_decode(self, inds) -> str:
         decoded = ""
-        last_ind = self.EMPTY_TOK
+        last_ind = self.char2ind[self.EMPTY_TOK]
         for ind in inds:
             if ind == last_ind:
                 continue
-            if ind != self.EMPTY_TOK:
+            if ind != self.char2ind[self.EMPTY_TOK]:
                 decoded += self.ind2char[ind]
             last_ind = ind
 
