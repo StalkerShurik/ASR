@@ -21,9 +21,18 @@ def collate_fn(dataset_items: list[dict]):
 
     batched_dataset_items = {}
 
-    TEXT_ENCODED_MAX_SIZE = 2**8
-    SPECTROGRAM_MAX_SIZE = 2**10
-    AUDIO_MAX_SIZE = 2**18
+    TEXT_ENCODED_MAX_SIZE = 0  # 2**8
+    SPECTROGRAM_MAX_SIZE = 0  # 2**10
+    AUDIO_MAX_SIZE = 0  # 2**18
+
+    for i in range(len(dataset_items)):
+        TEXT_ENCODED_MAX_SIZE = max(
+            TEXT_ENCODED_MAX_SIZE, dataset_items[i]["text_encoded"].shape[1]
+        )
+        SPECTROGRAM_MAX_SIZE = max(
+            SPECTROGRAM_MAX_SIZE, dataset_items[i]["spectrogram"].shape[2]
+        )
+        AUDIO_MAX_SIZE = max(AUDIO_MAX_SIZE, dataset_items[i]["audio"].shape[1])
 
     batched_dataset_items["spectrogram_length"] = []
     batched_dataset_items["text_encoded_length"] = []
