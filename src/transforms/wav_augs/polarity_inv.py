@@ -3,11 +3,11 @@ from torch import Tensor, nn
 from torchaudio.utils import download_asset
 
 
-class BackGroundNoise(nn.Module):
+class PolarityInversion(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self._aug = torch_audiomentations.AddBackgroundNoise(
-            p=0.3, sample_rate=16000, *args, **kwargs
+        self._aug = torch_audiomentations.PolarityInversion(
+            sample_rate=16000, p=0.25, *args, **kwargs
         )
 
     def __call__(self, data: Tensor):

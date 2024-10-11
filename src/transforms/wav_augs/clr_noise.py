@@ -6,7 +6,7 @@ class ColoredNoise(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__()
         self._aug = torch_audiomentations.AddColoredNoise(
-            sample_rate=16000, *args, **kwargs
+            p=0.25, sample_rate=16000, *args, **kwargs
         )
 
     def __call__(self, data: Tensor):
