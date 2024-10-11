@@ -47,13 +47,15 @@ class ConvolutionalExtractor(nn.Module):
         output = self.body_block(self.head_block(input))
 
         if self.n_blocks == 3:
-            output = self.body_block(output)
+            output = self.tail_block(output)
 
         return output
 
 
 class RNNBlock(nn.Module):
-    def __init__(self, input_size, rnn, hidden_size, num_layers, dropout):
+    def __init__(
+        self, input_size, rnn, hidden_size, num_layers, dropout, need_batchnorm=False
+    ):
         super().__init__()
         self.input_size = input_size
         self.rnn = rnn
@@ -61,6 +63,7 @@ class RNNBlock(nn.Module):
         self.num_layers = num_layers
 
         self.bidirectional = True
+        self.need_batchnorm = need_batchnorm
 
         self.rnn = getattr(nn, rnn)(
             input_size,
@@ -71,14 +74,18 @@ class RNNBlock(nn.Module):
             bidirectional=self.bidirectional,
             bias=False,
         )
-        self.batchnorm = nn.BatchNorm1d(hidden_size)
+
+        if self.need_batchnorm:
+            self.batchnorm = nn.BatchNorm1d(hidden_size)
 
     def forward(self, input):
         output = self.rnn(input)[0]
         bs, tm, ft = output.shape
         output = output.reshape((bs, tm, 2, -1))
-        output = output.sum(-2).permute((0, 2, 1))
-        output = self.batchnorm(output).permute((0, 2, 1))
+        output = output.sum(-2)
+
+        if self.need_batchnorm:
+            output = self.batchnorm(output.permute((0, 2, 1))).permute((0, 2, 1))
         return output
 
 
