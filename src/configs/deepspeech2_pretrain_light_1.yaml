@@ -10,16 +10,15 @@ optimizer:
   _target_: torch.optim.Adam
   lr: 3e-4
 lr_scheduler:
-  _target_: torch.optim.lr_scheduler.ConstantLR
-  factor: 1
-  total_iters: 1
+  _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+  T_max: 12800
 loss_function:
   _target_: src.loss.CTCLossWrapper
 text_encoder:
   _target_: src.text_encoder.CTCTextEncoder
 trainer:
   log_step: 50
-  n_epochs: 32
+  n_epochs: 64
   epoch_len: 200
   device_tensors: ["spectrogram", "text_encoded"] # which tensors should be on device (ex. GPU)
   resume_from: null # null or path to the checkpoint dir with *.pth and config.yaml
