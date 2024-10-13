@@ -37,10 +37,6 @@ class CTCBPETextEncoder:
         self.ind2char = dict(enumerate(self.vocab))
         self.char2ind = {v: k for k, v in self.ind2char.items()}
 
-        print(10 * "!!!!!")
-        print(self.vocab)
-        print(self.char2ind)
-
     def __len__(self):
         return len(self.vocab)
 
@@ -76,11 +72,9 @@ class CTCBPETextEncoder:
         Returns:
             raw_text (str): raw text with empty tokens and repetitions.
         """
-        return "".join(self.tokenizer.Decode(inds)).strip()
+        return "".join([self.ind2char[int(ind)] for ind in inds]).strip()
 
     def ctc_decode(self, inds) -> str:
-        # print(inds)
-
         decoded = ""
         last_ind = self.char2ind[self.EMPTY_TOK]
         for ind in inds:
