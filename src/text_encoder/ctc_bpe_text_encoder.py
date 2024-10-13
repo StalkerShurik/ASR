@@ -27,29 +27,34 @@ class CTCBPETextEncoder:
                 set to ascii
         """
 
-        self.path = "bpe.model"
-        self.tokenizer = spm.SentencePieceProcessor(model_file="bpe.model")
+        f = open("bpe_vocab.vc")
 
-        # if alphabet is None:
-        #     alphabet = list(ascii_lowercase + " ")
+        line = f.readline()
 
-        # self.alphabet = alphabet
-        # self.vocab = [self.EMPTY_TOK] + list(self.alphabet)
+        self.vocab = line.split(",")
 
-        # self.ind2char = dict(enumerate(self.vocab))
-        # self.char2ind = {v: k for k, v in self.ind2char.items()}
+        self.ind2char = dict(enumerate(self.vocab))
+        self.char2ind = {v: k for k, v in self.ind2char.items()}
 
     def __len__(self):
-        return self.tokenizer.vocab_size()
+        return len(self.vocab)
 
     def __getitem__(self, item: int):
         assert type(item) is int
-        return self.tokenizer.decode(item)
+        return self.ind2char.decode(item)
 
     def encode(self, text) -> torch.Tensor:
         text = self.normalize_text(text)
         try:
-            return torch.Tensor(self.tokenizer.encode(text)).unsqueeze(0)
+            inds = []
+            cur_str = ""
+            for sym in text:
+                cur_str += sym
+                if cur_str not in self.char2ind:
+                    inds.append(self.char2ind[cur_str[:-1]])
+                    cur_str = cur_str[-1]
+            inds.append(self.char2ind[cur_str])
+            return torch.Tensor(inds).unsqueeze(0)
         except KeyError:
             unknown_chars = set([char for char in text if char not in self.char2ind])
             raise Exception(
