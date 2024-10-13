@@ -10,6 +10,25 @@ from src.metrics.utils import calc_cer
 # Note 2: overall metric design can be significantly improved
 
 
+class CustomeBeamSearchCERMetric(BaseMetric):
+    def __init__(self, text_encoder, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.text_encoder = text_encoder
+
+    def __call__(
+        self, log_probs: Tensor, log_probs_length: Tensor, text: List[str], **kwargs
+    ):
+        cers = []
+        lengths = log_probs_length.detach().numpy()
+        for log_prob_vec, length, target_text in zip(log_probs.cpu(), lengths, text):
+            target_text = self.text_encoder.normalize_text(target_text)
+            pred_text = self.text_encoder.ctc_decode_custome_beam_search(
+                log_prob_vec[:length]
+            )
+            cers.append(calc_cer(target_text, pred_text))
+        return sum(cers) / len(cers)
+
+
 class BeamSearchCERMetric(BaseMetric):
     def __init__(self, text_encoder, *args, **kwargs):
         super().__init__(*args, **kwargs)
