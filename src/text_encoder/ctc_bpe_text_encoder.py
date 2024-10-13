@@ -32,9 +32,14 @@ class CTCBPETextEncoder:
         line = f.readline()
 
         self.vocab = line.split(",")
+        self.vocab[-1] = "q"
 
         self.ind2char = dict(enumerate(self.vocab))
         self.char2ind = {v: k for k, v in self.ind2char.items()}
+
+        print(10 * "!!!!!")
+        print(self.vocab)
+        print(self.char2ind)
 
     def __len__(self):
         return len(self.vocab)
