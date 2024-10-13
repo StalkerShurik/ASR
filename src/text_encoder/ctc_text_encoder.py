@@ -2,8 +2,11 @@ import re
 from string import ascii_lowercase
 
 import torch
+from torchaudio.models.decoder import ctc_decoder as torch_ctc_decoder
+from torchaudio.models.decoder import download_pretrained_files
 
-# TODO add CTC decode
+files = download_pretrained_files("librispeech-4-gram")
+
 # TODO add BPE, LM, Beam Search support
 # Note: think about metrics and encoder
 # The design can be remarkably improved
@@ -69,6 +72,20 @@ class CTCTextEncoder:
             last_ind = ind
 
         return decoded
+
+    def ctc_decode_beam_search(self, probs) -> str:
+        tokens = list(self.char2ind.keys())
+        beam_search = torch_ctc_decoder(
+            lexicon=files.lexicon[:-4] + "_processed.txt",
+            tokens=tokens,
+            blank_token="",
+            sil_token=" ",
+            lm=files.lm,
+        )
+        inds = beam_search(probs)
+        ind_decoded = [" ".join(hypo[0].words) for hypo in inds]
+
+        return ind_decoded
 
     @staticmethod
     def normalize_text(text: str):
