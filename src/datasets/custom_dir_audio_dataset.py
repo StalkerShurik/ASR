@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import torchaudio
+
 from src.datasets.base_dataset import BaseDataset
 
 
@@ -17,4 +19,8 @@ class CustomDirAudioDataset(BaseDataset):
                             entry["text"] = f.read().strip()
             if len(entry) > 0:
                 data.append(entry)
+
+            t_info = torchaudio.info(entry["path"])
+            entry["audio_len"] = t_info.num_frames / t_info.sample_rate
+
         super().__init__(data, *args, **kwargs)
