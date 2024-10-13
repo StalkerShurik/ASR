@@ -20,3 +20,6 @@ wget
 wheel==0.44.0
 pybind11==2.13.6
 fastwer==0.1.3
+
+flashlight-text==0.0.7
+sentencepiece==0.2.0
