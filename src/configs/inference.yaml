@@ -1,13 +1,16 @@
 defaults:
-  - model: baseline
-  - metrics: example
+  - model: deepspeech2_lightweighted
+  - metrics: inference
   - datasets: example_eval # we do not want to run inference on training data
-  - dataloader: example
-  - transforms: example
+  - dataloader: industrial
+  - transforms: example_only_instance
   - _self_
 inferencer:
-  device_tensors: ["data_object", "labels"] # which tensors should be on device (ex. GPU)
-  device: auto # device name or "auto"
+  device_tensors: ["spectrogram", "text_encoded"] # which tensors should be on device (ex. GPU)
+  #["data_object", "labels"]
+  device: mps # device name or "auto"
   save_path: "example" # any name here, can be a dataset name
   seed: 1
-  from_pretrained: "saved/model_best.pth" # path to the pretrained model
+  from_pretrained: "finetune3/finetune3.pth" # path to the pretrained model
+text_encoder:
+  _target_: src.text_encoder.CTCTextEncoder
