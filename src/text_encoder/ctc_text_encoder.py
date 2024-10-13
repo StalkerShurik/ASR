@@ -7,7 +7,6 @@ from torchaudio.models.decoder import download_pretrained_files
 
 files = download_pretrained_files("librispeech-4-gram")
 
-# TODO add BPE, LM, Beam Search support
 # Note: think about metrics and encoder
 # The design can be remarkably improved
 # to calculate stuff more efficiently and prettier
@@ -73,6 +72,41 @@ class CTCTextEncoder:
 
         return decoded
 
+    def bfs(self, hypos, moment):
+        new_hypos = {}
+        for next_ind, next_prob in enumerate(moment):
+            for (prefix, last_sym), prev_prob in hypos.items():
+                next_sym = self.ind2char[next_ind]
+                new_prefix = prefix
+                if next_sym != last_sym:
+                    if next_sym != self.EMPTY_TOK:
+                        new_prefix += next_sym
+                    last_sym = next_sym
+                if (new_prefix, last_sym) in new_hypos:
+                    new_hypos[(new_prefix, last_sym)] += prev_prob * next_prob
+                else:
+                    new_hypos[(new_prefix, last_sym)] = prev_prob * next_prob
+        return new_hypos
+
+    def drop_hypos(self, hypos, beam_size):
+        return dict(
+            sorted(list(hypos.items()), key=lambda x: x[1], reverse=True)[:beam_size]
+        )
+
+    def ctc_decode_custome_beam_search(self, probs, beam_size=150):
+        probs = torch.exp(probs)
+        hypos = {("", self.EMPTY_TOK): 1.0}
+
+        for i in range(probs.shape[0]):
+            moment = probs[i, :]
+            new_hypos = self.bfs(hypos, moment)
+            # print(new_hypos)
+            hypos = self.drop_hypos(new_hypos, beam_size)
+
+        hypos_formatted = [(text, prob) for (text, _), prob in hypos.items()]
+
+        return sorted(hypos_formatted, key=lambda x: x[1], reverse=True)[0][0]
+
     def ctc_decode_beam_search(self, probs) -> str:
         tokens = list(self.char2ind.keys())
         beam_search = torch_ctc_decoder(
@@ -81,6 +115,7 @@ class CTCTextEncoder:
             blank_token="",
             sil_token=" ",
             lm=files.lm,
+            lm_weight=1.5,
         )
         inds = beam_search(probs)
         ind_decoded = [" ".join(hypo[0].words) for hypo in inds]
